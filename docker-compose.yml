@@ -1,0 +1,11 @@
+version: '3.8'
+
+services: 
+  python-backend:
+    build: 
+      context: backend/.
+      dockerfile: Dockerfile
+    container_name: python-backend
+    ports: 
+      - "8000:8000"
+    
