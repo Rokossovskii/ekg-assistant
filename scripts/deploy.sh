@@ -18,7 +18,7 @@ if [ ! -d ".git" ]; then
   git clone "$REPO_URL" .
 else
   echo ">>> Pulling latest changes"
-  git pull origin main
+  git pull origin master
 fi
 
 echo ">>> Cleaning up Docker"

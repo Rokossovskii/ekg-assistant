@@ -5,6 +5,7 @@ services:
     build: 
       context: backend/.
       dockerfile: Dockerfile
+      pull: true
     container_name: python-backend
     ports: 
       - "8000:8000"

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 
 from app.logic.ekg_image_logic import process_image
 from app.logic.ekg_signal_logic import process_signal
@@ -19,9 +20,10 @@ def validate_image(file: UploadFile):
 
 
 @ekg_router.post("/image")
-async def analyze_image_endpoint(image_file: UploadFile = File(...)):
+async def analyze_image_endpoint(image_file: UploadFile = File(...)) -> JSONResponse:
     validate_image(image_file)
-    process_image(image_file)
+    processed_data = process_image(image_file)
+    return JSONResponse(content=processed_data)
 
 
 def validate_signal(file: UploadFile):
@@ -32,6 +34,7 @@ def validate_signal(file: UploadFile):
 
 
 @ekg_router.post("/signal")
-async def analyze_signal_endpoint(signal_file: UploadFile = File(...)):
+async def analyze_signal_endpoint(signal_file: UploadFile = File(...)) -> JSONResponse:
     validate_signal(signal_file)
-    process_signal(signal_file)
+    processed_data = process_signal(signal_file)
+    return JSONResponse(content=processed_data)
