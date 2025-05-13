@@ -1,13 +1,13 @@
 import os
 import matplotlib.pyplot as plt
 
-from image_processing import preprocess_image
-from signal_processing import (
+from modules.image_processing import preprocess_image
+from modules.signal_processing import (
     extract_signal, detect_grid_size,
     calibrate_signal, resample_signal
 )
-from wfdb_utils import save_to_wfdb
-
+from modules.wfdb_utils import save_to_wfdb
+from modules.wfdb_json_converter import convert_wfdb_to_dict
 
 class ECGProcessor:
     def __init__(self, debug=False, time_per_grid=0.04, mv_per_grid=0.1, force_sample_rate=None):
@@ -91,10 +91,13 @@ class ECGProcessor:
         self._create_plot(time_values, amplitude_values, output_dir)
 
         base_filename = os.path.splitext(os.path.basename(image_path))[0]
+       
         wfdb_path = save_to_wfdb(
             amplitude_values, sample_rate,
             output_dir, base_filename
         )
+
+        convert_wfdb_to_dict(wfdb_path)
 
         if self.debug:
             print(f"Saved WFDB record: {wfdb_path}")
