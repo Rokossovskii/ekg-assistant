@@ -1,4 +1,5 @@
 import os
+import tempfile
 import matplotlib.pyplot as plt
 
 from modules.image_processing import preprocess_image
@@ -35,6 +36,33 @@ class ECGProcessor:
         )
 
         return time_values, amplitude_values, sample_rate
+
+
+    def process_to_wfdb(self, image_path) -> dict:
+        debug_dir = self._setup_directories(output_dir)
+
+        binary_image, original_image = preprocess_image(image_path, debug_dir)
+
+        small_grid_size = self._detect_grid(original_image, debug_dir)
+
+        x_values, y_values = extract_signal(binary_image, debug_dir)
+
+        sample_rate, _, amplitude_values = self._calibrate(
+            x_values, y_values, small_grid_size
+        )
+
+        base_filename = os.path.splitext(os.path.basename(image_path))[0]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            wfdb_path = save_to_wfdb(
+                amplitude_values, sample_rate,
+                tmpdir, base_filename
+            )
+
+            wfdb_dict = convert_wfdb_to_dict(wfdb_path)
+
+        return wfdb_dict
+
 
     def _setup_directories(self, output_dir):
         os.makedirs(output_dir, exist_ok=True)
@@ -91,13 +119,11 @@ class ECGProcessor:
         self._create_plot(time_values, amplitude_values, output_dir)
 
         base_filename = os.path.splitext(os.path.basename(image_path))[0]
-       
+
         wfdb_path = save_to_wfdb(
             amplitude_values, sample_rate,
             output_dir, base_filename
         )
-
-        convert_wfdb_to_dict(wfdb_path)
 
         if self.debug:
             print(f"Saved WFDB record: {wfdb_path}")

@@ -19,6 +19,7 @@ Options:
 import argparse
 import os
 import sys
+import tempfile
 from modules.ecg_processor import ECGProcessor
 
 
@@ -70,6 +71,21 @@ def main():
         import traceback
         traceback.print_exc()
         sys.exit(1)
+
+
+def process_ecg_image(image_bytes: bytes, filename: str) -> dict:
+    ext = os.path.splitext(filename)[-1].lower() or ".png"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_image_path = os.path.join(tmpdir, f"input{ext}")
+
+        with open(tmp_image_path, "wb") as f:
+            f.write(image_bytes)
+
+        processor = ECGProcessor()
+        wfdb_dict = processor.process_to_wfdb(tmp_image_path)
+
+        return wfdb_dict
 
 
 if __name__ == "__main__":
