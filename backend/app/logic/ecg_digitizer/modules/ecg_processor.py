@@ -2,13 +2,14 @@ import os
 import tempfile
 import matplotlib.pyplot as plt
 
-from modules.image_processing import preprocess_image
-from modules.signal_processing import (
+from .image_processing import preprocess_image
+from .signal_processing import (
     extract_signal, detect_grid_size,
     calibrate_signal, resample_signal
 )
-from modules.wfdb_utils import save_to_wfdb
-from modules.wfdb_json_converter import convert_wfdb_to_dict
+from .wfdb_utils import save_to_wfdb
+from ...wfdb_converter.wfdb_json_converter import convert_wfdb_to_dict
+
 
 class ECGProcessor:
     def __init__(self, debug=False, time_per_grid=0.04, mv_per_grid=0.1, force_sample_rate=None):
@@ -37,15 +38,12 @@ class ECGProcessor:
 
         return time_values, amplitude_values, sample_rate
 
+    def process_to_wfdb(self, image_path) -> list[dict]:
+        binary_image, original_image = preprocess_image(image_path)
 
-    def process_to_wfdb(self, image_path) -> dict:
-        debug_dir = self._setup_directories(output_dir)
+        small_grid_size = self._detect_grid(original_image)
 
-        binary_image, original_image = preprocess_image(image_path, debug_dir)
-
-        small_grid_size = self._detect_grid(original_image, debug_dir)
-
-        x_values, y_values = extract_signal(binary_image, debug_dir)
+        x_values, y_values = extract_signal(binary_image)
 
         sample_rate, _, amplitude_values = self._calibrate(
             x_values, y_values, small_grid_size
@@ -63,7 +61,6 @@ class ECGProcessor:
 
         return wfdb_dict
 
-
     def _setup_directories(self, output_dir):
         os.makedirs(output_dir, exist_ok=True)
 
@@ -74,7 +71,7 @@ class ECGProcessor:
 
         return debug_dir
 
-    def _detect_grid(self, image, debug_dir):
+    def _detect_grid(self, image, debug_dir=None):
         small_grid_size, large_grid_size = detect_grid_size(image, debug_dir)
 
         if self.debug:

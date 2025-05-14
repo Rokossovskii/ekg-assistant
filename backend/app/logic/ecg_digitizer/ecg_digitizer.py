@@ -20,7 +20,10 @@ import argparse
 import os
 import sys
 import tempfile
-from modules.ecg_processor import ECGProcessor
+
+from pathlib import Path
+
+from .modules.ecg_processor import ECGProcessor
 
 
 def parse_arguments():
@@ -32,13 +35,13 @@ def parse_arguments():
 
     # Optional arguments
     parser.add_argument('--time-per-grid', type=float, default=0.04,
-                      help='Time per small grid square in seconds (default: 0.04s)')
+                        help='Time per small grid square in seconds (default: 0.04s)')
     parser.add_argument('--mv-per-grid', type=float, default=0.1,
-                      help='Voltage per small grid square in mV (default: 0.1mV)')
+                        help='Voltage per small grid square in mV (default: 0.1mV)')
     parser.add_argument('--sample-rate', type=int,
-                      help='Force specific sample rate (default: calculated from grid)')
+                        help='Force specific sample rate (default: calculated from grid)')
     parser.add_argument('--debug', action='store_true',
-                      help='Enable debug mode with additional output')
+                        help='Enable debug mode with additional output')
 
     return parser.parse_args()
 
@@ -73,11 +76,9 @@ def main():
         sys.exit(1)
 
 
-def process_ecg_image(image_bytes: bytes, filename: str) -> dict:
-    ext = os.path.splitext(filename)[-1].lower() or ".png"
-
+def process_ecg_image(image_bytes: bytes, image_filename: str) -> list[dict]:
     with tempfile.TemporaryDirectory() as tmpdir:
-        tmp_image_path = os.path.join(tmpdir, f"input{ext}")
+        tmp_image_path = Path(tmpdir) / image_filename
 
         with open(tmp_image_path, "wb") as f:
             f.write(image_bytes)

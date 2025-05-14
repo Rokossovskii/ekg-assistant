@@ -1,12 +1,11 @@
+import tempfile
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-from app.logic.ekg_image_logic import process_image
-from app.logic.ekg_signal_logic import process_signal
-
-from scripts.ecg_digitizer.ecg_digitizer import process_ecg_image
+from ..logic.ecg_digitizer.ecg_digitizer import process_ecg_image
+from ..logic.wfdb_converter.wfdb_json_converter import convert_wfdb_to_dict
 
 ekg_router = APIRouter(prefix="/ekg", tags=["ekg"])
 
@@ -29,7 +28,12 @@ async def analyze_image_endpoint(image_file: UploadFile = File(...)) -> JSONResp
     filename = image_file.filename
 
     processed_data = process_ecg_image(image_bytes, filename)
-    return JSONResponse(content=processed_data)
+
+    return JSONResponse(content={
+        "start_time": '',
+        "end_time": '',
+        "channels": processed_data
+    })
 
 
 def validate_signal(file: UploadFile):
@@ -40,9 +44,31 @@ def validate_signal(file: UploadFile):
 
 
 @ekg_router.post("/signal")
-async def analyze_signal_endpoint(hea_file: UploadFile = File(...), dat_file: UploadFile = File(...)) -> JSONResponse:
+async def analyze_signal_endpoint(
+        hea_file: UploadFile = File(...),
+        dat_file: UploadFile = File(...),
+        xws_file: UploadFile = File(...)) -> JSONResponse:
+
     validate_signal(hea_file)
     validate_signal(dat_file)
 
-    processed_data = process_signal(signal_file)
-    return JSONResponse(content=processed_data)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        hea_filename = hea_file.filename
+        dat_filename = dat_file.filename
+
+        tmp_hea_path = Path(tmpdir) / hea_filename
+        tmp_dat_path = Path(tmpdir) / dat_filename
+
+        with open(tmp_hea_path, "wb") as f:
+            f.write(await hea_file.read())
+
+        with open(tmp_dat_path, "wb") as f:
+            f.write(await dat_file.read())
+
+        processed_data = convert_wfdb_to_dict(tmpdir + "/" + hea_filename.split(".")[0])
+
+    return JSONResponse(content={
+        "start_time": '',
+        "end_time": '',
+        "channels": processed_data
+    })
