@@ -8,6 +8,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
+    "https://igorstalmach.github.io",
     "https://igorstalmach.github.io/ecg-visualizer/",
 ]
 
