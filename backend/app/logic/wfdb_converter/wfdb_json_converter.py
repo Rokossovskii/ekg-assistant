@@ -2,6 +2,7 @@ import wfdb
 import json
 import os
 
+
 def convert_wfdb_to_dict(record_path):
     """
     Loads a WFDB record and converts it into a list of dictionaries
@@ -30,8 +31,13 @@ def convert_wfdb_to_dict(record_path):
         raise FileNotFoundError(f"Expected WFDB files not found:\n - {hea_file}\n - {dat_file}")
 
     try:
-        # Pass full path WITHOUT using pn_dir
-        record = wfdb.rdrecord(full_path)
+        record_info = wfdb.rdheader(full_path)
+        total_samples = record_info.sig_len
+
+        max_samples = 2000
+        end_sample = min(max_samples, total_samples)
+
+        record = wfdb.rdrecord(full_path, sampto=end_sample)
     except Exception as e:
         raise RuntimeError(f"Could not read WFDB record at '{full_path}': {e}")
 

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import wfdb
 
+
 def save_to_wfdb(amplitude_values, sample_rate, output_dir, base_filename):
     signal = np.array(amplitude_values).reshape(-1, 1)
 
