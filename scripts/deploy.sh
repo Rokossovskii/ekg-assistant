@@ -6,6 +6,21 @@ REPO_URL="git@github.com:Rokossovskii/ekg-assistant.git"
 
 echo ">>> DEPLOY STARTED at $(date)"
 
+if ! command -v ufw >/dev/null 2>&1; then
+  echo ">>> Installing ufw (firewall)"
+  sudo apt-get update && sudo apt-get install -y ufw
+fi
+
+echo ">>> Ensuring firewall allows HTTP/HTTPS"
+sudo ufw allow 80/tcp || true
+sudo ufw allow 443/tcp || true
+sudo ufw allow OpenSSH || true
+
+if [[ "$(sudo ufw status | grep -c 'Status: active')" -eq 0 ]]; then
+  echo ">>> Enabling firewall"
+  sudo ufw --force enable
+fi
+
 if [ ! -d "$APP_DIR" ]; then
   echo ">>> Creating application directory"
   mkdir -p "$APP_DIR"
