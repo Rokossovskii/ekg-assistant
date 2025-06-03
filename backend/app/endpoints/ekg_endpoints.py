@@ -25,17 +25,16 @@ async def analyze_image_endpoint(
     image_bytes = await image_file.read()
     filename = image_file.filename
 
-    processed_data, crop_idx, max_crop_idx = analyze_image_logic(
+    processed_data, crop_idx, max_crop_idx, events = analyze_image_logic(
         image_bytes, filename, crop_idx
     )
 
     return JSONResponse(
         content={
-            "start_time": "",
-            "end_time": "",
             "channels": processed_data,
             "crop_idx": crop_idx,
             "max_crop_idx": max_crop_idx,
+            "events": events,
         }
     )
 
@@ -62,11 +61,9 @@ async def analyze_signal_endpoint(
 
     return JSONResponse(
         content={
-            "start_time": "",
-            "end_time": "",
             "channels": processed_data,
             "crop_idx": crop_idx,
             "max_crop_idx": max_crop_idx,
-            "events": events
+            "events": events,
         }
     )
