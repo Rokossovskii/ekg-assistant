@@ -6,3 +6,13 @@ venv
 *.egg-info/
 *.egg
 temp/*
+__pycache__
+100.dat
+100.xws
+100.hea
+
+ECG-normal.jpg
+
+certbot/conf/archive
+certbot/conf/live
+certbot/conf/renewal
