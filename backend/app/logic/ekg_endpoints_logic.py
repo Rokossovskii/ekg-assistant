@@ -9,7 +9,7 @@ from app.logic.wfdb_converter.wfdb_json_converter import (
 )
 
 
-def analyze_image_logic(image_bytes: bytes, filename: str) -> list[dict]:
+def analyze_image_logic(image_bytes: bytes, filename: str, crop_idx: int) -> list[dict]:
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_image_path = Path(tmpdir) / filename
 
@@ -17,9 +17,18 @@ def analyze_image_logic(image_bytes: bytes, filename: str) -> list[dict]:
             f.write(image_bytes)
 
         processor = ECGProcessor()
-        wfdb_dict = processor.process_to_wfdb(tmp_image_path)
+        wfdb_path = processor.process_to_wfdb(tmp_image_path, tmpdir)
+        print(f"{wfdb_path}")
+        print(list(wfdb_path.parent.iterdir()))
+        wfdb_window_list = create_window_list(tmp_hea_path=wfdb_path)
+        print(wfdb_window_list)
+        crop_idx = min(crop_idx, len(wfdb_window_list) - 1)
+        crop_idx = max(crop_idx, -len(wfdb_window_list) + 1)
+        processed_data = convert_wfdb_to_dict(
+            *wfdb_window_list[crop_idx], tmp_dat_path=wfdb_path
+        )
 
-        return wfdb_dict
+        return processed_data, crop_idx, len(wfdb_window_list) - 1
 
 
 async def analyze_signal_logic(hea_file, dat_file, xws_file, crop_idx: int = 0) -> dict:

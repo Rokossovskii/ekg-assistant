@@ -14,7 +14,9 @@ ALLOWED_SIGNAL_EXTENSIONS = [".dat", ".hea"]
 
 
 @ekg_router.post("/image")
-async def analyze_image_endpoint(image_file: UploadFile = File(...)) -> JSONResponse:
+async def analyze_image_endpoint(
+    crop_idx: int = 0, image_file: UploadFile = File(...)
+) -> JSONResponse:
     if image_file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400, detail="Tylko pliki PNG lub JPG są akceptowane."
@@ -23,10 +25,18 @@ async def analyze_image_endpoint(image_file: UploadFile = File(...)) -> JSONResp
     image_bytes = await image_file.read()
     filename = image_file.filename
 
-    processed_data = analyze_image_logic(image_bytes, filename)
+    processed_data, crop_idx, max_crop_idx = analyze_image_logic(
+        image_bytes, filename, crop_idx
+    )
 
     return JSONResponse(
-        content={"start_time": "", "end_time": "", "channels": processed_data}
+        content={
+            "start_time": "",
+            "end_time": "",
+            "channels": processed_data,
+            "crop_idx": crop_idx,
+            "max_crop_idx": max_crop_idx,
+        }
     )
 
 
