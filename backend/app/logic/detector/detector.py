@@ -55,16 +55,17 @@ def group_events(event_times, duration=3.0):
     grouped.append((start, end))
     return grouped
 
-def detect_sickness(tmp_hea_path, channel="MLII"):
+def detect_sickness(tmp_hea_path):
     base_path = tmp_hea_path.with_suffix("")
     record = wfdb.rdrecord(base_path)
 
     fs = record.fs
-    if channel in record.sig_name:
-        ch_idx = record.sig_name.index(channel)
-    else:
-        raise ValueError(f"Channel '{channel}' not found in WFDB record.")
+    channel_names = record.sig_name
 
+    if not channel_names:
+        raise ValueError("No channels found in the WFDB header.")
+    
+    ch_idx = 0
     signal = record.p_signal[:, ch_idx]
 
     r_peaks = detect_r_peaks(signal, fs)
