@@ -13,8 +13,8 @@ def compute_rr_intervals(r_peaks, fs):
 def compute_heart_rate(rr_intervals):
     return 60 / rr_intervals
 
-def detect_events(times, hr, threshold, comparison):
-    result_times = []
+def detect_events(times, hr, threshold, comparison, label):
+    result = []
     window_duration = 3.0
     for i in range(len(hr)):
         window_start = times[i]
@@ -23,8 +23,12 @@ def detect_events(times, hr, threshold, comparison):
         if np.sum(in_window) > 0:
             avg_hr = np.mean(hr[in_window])
             if comparison(avg_hr, threshold):
-                result_times.append(window_start)
-    return result_times
+                result.append({
+                    "start_time": round(window_start, 2),
+                    "end_time": round(window_end, 2),
+                    "type": label
+                })
+    return result
 
 def detect_brady_tachy_events(sampfrom, sampto, **kwargs):
     tmp_dat_path = kwargs.pop("tmp_dat_path", None)
@@ -45,13 +49,11 @@ def detect_brady_tachy_events(sampfrom, sampto, **kwargs):
     rr_intervals = compute_rr_intervals(r_peaks, fs)
     heart_rates = compute_heart_rate(rr_intervals)
 
-    brady_times = detect_events(r_peak_times[:-1], heart_rates, 60, lambda x, t: x < t)
-    tachy_times = detect_events(r_peak_times[:-1], heart_rates, 100, lambda x, t: x > t)
+    brady_events = detect_events(
+        r_peak_times[:-1], heart_rates, 60, lambda x, t: x < t, "bradycardia"
+    )
+    tachy_events = detect_events(
+        r_peak_times[:-1], heart_rates, 100, lambda x, t: x > t, "tachycardia"
+    )
 
-    events = []
-    for t in brady_times:
-        events.append({"type": "bradycardia", "time_sec": round(t, 2)})
-    for t in tachy_times:
-        events.append({"type": "tachycardia", "time_sec": round(t, 2)})
-
-    return events
+    return brady_events + tachy_events
