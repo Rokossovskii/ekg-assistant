@@ -56,7 +56,7 @@ async def analyze_signal_endpoint(
             status_code=400, detail="Tylko pliki .dat lub .hea są akceptowane."
         )
 
-    processed_data, crop_idx, max_crop_idx = await analyze_signal_logic(
+    processed_data, crop_idx, max_crop_idx, events = await analyze_signal_logic(
         hea_file, dat_file, xws_file, crop_idx
     )
 
@@ -67,5 +67,6 @@ async def analyze_signal_endpoint(
             "channels": processed_data,
             "crop_idx": crop_idx,
             "max_crop_idx": max_crop_idx,
+            "events": events
         }
     )
