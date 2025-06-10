@@ -69,6 +69,6 @@ async def analyze_signal_logic(hea_file, dat_file, xws_file, crop_idx: int = 0) 
 
   
 
-        events = detect_sickness(*wfdb_window_list[crop_idx], tmp_hea_path=tmp_hea_path)
+        events = detect_sickness(*wfdb_window_list[crop_idx], crop_idx, tmp_hea_path=tmp_hea_path)
 
         return processed_data, crop_idx, len(wfdb_window_list) - 1, events

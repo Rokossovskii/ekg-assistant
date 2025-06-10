@@ -46,7 +46,7 @@ def filter_events_by_time(events, start_time, end_time):
         if event["end"] >= start_time and event["start"] <= end_time
     ]
 
-def detect_sickness(sampfrom, sampto, tmp_hea_path):
+def detect_sickness(sampfrom, sampto, crop_idx, tmp_hea_path):
 
     base_path = tmp_hea_path.with_suffix("")
     record = wfdb.rdrecord(base_path)
@@ -75,8 +75,8 @@ def detect_sickness(sampfrom, sampto, tmp_hea_path):
         {"start": (t-1.5)*fs, "end": (t+1.5)*fs, "type": "bradycardia"} for t in bradycardia_onsets
     ] + [{"start": (t-1.5)*fs, "end": (t+1.5)*fs, "type": "tachycardia"} for t in tachycardia_onsets]
 
-    start_time = sampfrom / fs
-    end_time = sampto / fs
+    start_time = sampfrom / fs * (crop_idx+1)
+    end_time = sampto / fs * (crop_idx+1)
 
     all_events = filter_events_by_time(all_events, start_time, end_time)
 
