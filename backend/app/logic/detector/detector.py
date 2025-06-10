@@ -80,6 +80,9 @@ def detect_sickness(sampfrom, sampto, crop_idx, tmp_hea_path):
 
     all_events = filter_events_by_time(all_events, start_time, end_time)
     
+    for event in all_events:
+        event["start"] -= crop_idx*4000
+        event["end"] -= crop_idx*4000
 
     return all_events
 
