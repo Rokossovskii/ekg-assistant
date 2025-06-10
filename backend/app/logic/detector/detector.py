@@ -72,16 +72,20 @@ def detect_sickness(sampfrom, sampto, crop_idx, tmp_hea_path):
     #    print(f"Tachykardia wykryta w okolicach {t:.2f} sekundy.")
 
     all_events = [
-        {"start": (t-1.5)*fs, "end": (t+1.5)*fs, "type": "bradycardia"} for t in bradycardia_onsets
-    ] + [{"start": (t-1.5)*fs, "end": (t+1.5)*fs, "type": "tachycardia"} for t in tachycardia_onsets]
+        {"start": max(0, (t - 1) * fs), "end": (t+1)*fs, "type": "bradycardia"} for t in bradycardia_onsets
+    ] + [{"start": max(0, (t - 1) * fs), "end": (t+1)*fs, "type": "tachycardia"} for t in tachycardia_onsets]
 
-    start_time = sampfrom / fs * (crop_idx+1)
-    end_time = sampto / fs * (crop_idx+1)
+    start_time = sampfrom / fs
+    end_time = sampto / fs
 
     all_events = filter_events_by_time(all_events, start_time, end_time)
 
+    for event in all_events:
+        event["start"] -= crop_idx*4000
+        event["end"] -= crop_idx*4000
+    
+
     return all_events
-    #print(all_events)
 
 
 
