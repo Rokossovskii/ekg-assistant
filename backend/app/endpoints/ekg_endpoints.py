@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import APIRouter, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-from app.logic.ekg_endpoints_logic import analyze_image_logic, analyze_signal_logic
+from ..logic.ekg_endpoints_logic import analyze_image_logic, analyze_signal_logic
 
 ekg_router = APIRouter(prefix="/ekg", tags=["ekg"])
 
@@ -42,6 +42,7 @@ async def analyze_image_endpoint(
 @ekg_router.post("/signal")
 async def analyze_signal_endpoint(
     crop_idx: int = 0,
+    show_full_signal: bool = True,
     hea_file: UploadFile = File(...),
     dat_file: UploadFile = File(...),
     xws_file: UploadFile = File(...),
@@ -56,7 +57,7 @@ async def analyze_signal_endpoint(
         )
 
     processed_data, crop_idx, max_crop_idx, events = await analyze_signal_logic(
-        hea_file, dat_file, xws_file, crop_idx
+        hea_file, dat_file, xws_file, crop_idx, show_full_signal
     )
 
     return JSONResponse(
