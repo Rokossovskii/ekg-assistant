@@ -1,11 +1,13 @@
-import numpy as np
 import wfdb
+import numpy as np
 from scipy.signal import find_peaks
+import matplotlib.pyplot as plt
+
+
 
 def detect_r_peaks(signal, fs):
-    distance = int(0.3 * fs)
-    threshold = np.percentile(signal, 75)
-    peaks, _ = find_peaks(signal, distance=distance, height=threshold)
+    distance = int(0.6 * fs)
+    peaks, _ = find_peaks(signal, distance=distance, height=np.mean(signal))
     return peaks
 
 def compute_rr_intervals(r_peaks, fs):
@@ -38,24 +40,6 @@ def detect_tachycardia(times, hr, window_duration=3.0, threshold=100):
                 tachycardia_times.append(window_start)
     return tachycardia_times
 
-def group_events(event_times, duration=3.0):
-    if not event_times:
-        return []
-
-    grouped = []
-    start = event_times[0]
-    end = start + duration
-
-    for t in event_times[1:]:
-        if t <= end:
-            end = t + duration
-        else:
-            grouped.append((start, end))
-            start = t
-            end = t + duration
-    grouped.append((start, end))
-    return grouped
-
 def filter_events_by_time(events, start_time, end_time):
     return [
         event for event in events
@@ -63,17 +47,12 @@ def filter_events_by_time(events, start_time, end_time):
     ]
 
 def detect_sickness(sampfrom, sampto, tmp_hea_path):
+
     base_path = tmp_hea_path.with_suffix("")
     record = wfdb.rdrecord(base_path)
 
     fs = record.fs
-    channel_names = record.sig_name
-
-    if not channel_names:
-        raise ValueError("No channels found in the WFDB header.")
-
-    ch_idx = 0  # Using the first available channel
-    signal = record.p_signal[:, ch_idx]
+    signal = record.p_signal[:, 0]
 
     r_peaks = detect_r_peaks(signal, fs)
     r_peak_times = r_peaks / fs
@@ -81,23 +60,28 @@ def detect_sickness(sampfrom, sampto, tmp_hea_path):
     rr_intervals = compute_rr_intervals(r_peaks, fs)
     heart_rates = compute_heart_rate(rr_intervals)
 
-    brady_times = detect_bradycardia(r_peak_times[:-1], heart_rates)
-    tachy_times = detect_tachycardia(r_peak_times[:-1], heart_rates)
+    bradycardia_onsets = detect_bradycardia(r_peak_times[:-1], heart_rates)
+    tachycardia_onsets = detect_tachycardia(r_peak_times[:-1], heart_rates)
 
-    brady_events = group_events(brady_times)
-    tachy_events = group_events(tachy_times)
+    #print(f"\nWykryto {len(bradycardia_onsets)} epizodów bradykardii.")
+    #for t in bradycardia_onsets:
+    #    print(f"Bradykardia wykryta w okolicach {t:.2f} sekundy.")
+
+    #print(f"\nWykryto {len(tachycardia_onsets)} epizodów tachykardii.")
+    #for t in tachycardia_onsets:
+    #    print(f"Tachykardia wykryta w okolicach {t:.2f} sekundy.")
 
     all_events = [
-        {"start": s, "end": e, "type": "bradycardia"} for s, e in brady_events
-    ] + [{"start": s, "end": e, "type": "tachycardia"} for s, e in tachy_events]
+        {"start": t-1.5, "end": t+1.5, "type": "bradycardia"} for t in bradycardia_onsets
+    ] + [{"start": t-1.5, "end": t+1.5, "type": "tachycardia"} for t in tachycardia_onsets]
 
     start_time = sampfrom / fs
     end_time = sampto / fs
 
-
-
-    all_events.sort(key=lambda ev: ev["start"])
-    #all_events=filter_events_by_time(all_events, start_time, end_time)
-
+    all_events = filter_events_by_time(all_events, start_time, end_time)
 
     return all_events
+    #print(all_events)
+
+
+
