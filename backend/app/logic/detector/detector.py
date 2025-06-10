@@ -94,6 +94,10 @@ def detect_sickness(sampfrom, sampto, tmp_hea_path):
     start_time = sampfrom / fs
     end_time = sampto / fs
 
+
+
     all_events.sort(key=lambda ev: ev["start"])
-    all_events=filter_events_by_time(all_events, start_time, end_time)
+    #all_events=filter_events_by_time(all_events, start_time, end_time)
+
+
     return all_events
