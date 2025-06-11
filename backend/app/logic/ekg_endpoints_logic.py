@@ -29,7 +29,7 @@ def analyze_image_logic(image_bytes: bytes, filename: str, crop_idx: int) -> lis
         processed_data = convert_wfdb_to_dict(
             *wfdb_window_list[crop_idx], tmp_dat_path=wfdb_path
         )
-        events = detect_sickness(*wfdb_window_list[crop_idx], tmp_hea_path=wfdb_path)
+        events = detect_sickness(*wfdb_window_list[crop_idx], crop_idx, tmp_hea_path=wfdb_path)
 
         return processed_data, crop_idx, len(wfdb_window_list) - 1, events
 
